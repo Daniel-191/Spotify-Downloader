@@ -8,10 +8,10 @@ This script takes a **Spotify link** (album, playlist, or track) and downloads t
 ## 🔄 How It Works
 ```mermaid
 flowchart LR
-    A[Spotify Link<br>(Playlist / Album / Track)] --> B[Find Match on YouTube]
+    A[Spotify Link: Playlist, Album, or Track] --> B[Find Match on YouTube]
     B --> C[Download Audio]
     C --> D[Convert with ffmpeg]
-    D --> E[Saved MP3 / Audio File]
+    D --> E[Save as MP3 or Audio File]
 ```
 
 ---
@@ -70,7 +70,7 @@ You’ll need `ffmpeg` installed and accessible in your system PATH.
 
 ---
 
-## ▶️ Usage
+## 🚀 Usage
 
 - **Windows (easy way):**  
   Just double-click `main.py` to run the program.  
@@ -96,6 +96,8 @@ The script will fetch the best match from YouTube and automatically convert it t
 
 ---
 
-## ⚠️ Disclaimer
-This project is for **educational purposes only**.  
-Please support artists by streaming legally on [Spotify](https://spotify.com).
+> [!WARNING]  
+> This project is for **educational purposes only**.  
+> Please support artists by streaming legally on [Spotify](https://spotify.com).
+
+---
