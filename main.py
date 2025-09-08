@@ -11,6 +11,8 @@ import urllib3
 import time
 import shutil
 
+# Feel free to fork and contribute all you want.
+
 # Supress any console logging or warning errors (they not needed)
 warnings.filterwarnings("ignore")
 urllib3.disable_warnings(urllib3.exceptions.NotOpenSSLWarning)
