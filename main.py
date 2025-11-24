@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Use this to get input from user
     webpage_UI = gr.Interface(
         fn=greet,
-        inputs=["text", "slider"],
+        inputs=["text"],
         outputs=["text"],
         api_name="predict"
     )
@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     print("Enter a Spotify URL (track, album, or playlist)\n")
 
-    url = input("[Spotify URL]: ").strip()
+    url = input("[Spotify URL]:> ").strip()
 
     print("\nStarting download...\n")
     # The downloader function will handle everything:
