@@ -25,14 +25,17 @@ def greet(name, intensity):
 if __name__ == "__main__":
     downloader = SpotifyDownloader(download_dir='downloaded')
 
-    demo = gr.Interface(
+    # Use this to get input from user
+    webpage_UI = gr.Interface(
         fn=greet,
         inputs=["text", "slider"],
         outputs=["text"],
         api_name="predict"
     )
 
-    demo.launch() # add share=True if u want to share the demo
+    # see gradio docs here: https://www.gradio.app/guides/quickstart
+
+    webpage_UI.launch() # add share=True if u want to share the demo globally
 
     # write your code here!! (OOP)
 
