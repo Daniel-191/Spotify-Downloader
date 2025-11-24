@@ -19,8 +19,19 @@ from spotify_lib import SpotifyDownloader
 
 import gradio as gr
 
-def greet(name, intensity):
-    return "Hello, " + name + "!" * int(intensity)
+def greet(spotify_url, intensity):
+    # The downloader function will handle everything:
+    # Downloading the songs, validiating if the URl is valid Etc
+    stats = downloader.download_playlist(spotify_url)
+
+    # Print results
+    print("\n" + "="*50)
+    print(f"Download Complete!")
+    print(f"Total tracks: {stats['total']}")
+    print(f"Successfully downloaded: {stats['successful']}")
+    print(f"Failed: {stats['failed']}")
+    print("="*50)
+    return f"Downloading {spotify_url} !! (see console for logs)"
 
 if __name__ == "__main__":
     downloader = SpotifyDownloader(download_dir='downloaded')
@@ -36,25 +47,3 @@ if __name__ == "__main__":
     # see gradio docs here: https://www.gradio.app/guides/quickstart
 
     webpage_UI.launch() # add share=True if u want to share the demo globally
-
-    # write your code here!! (OOP)
-
-    # Take a look at this simple code here for downloading a track, album or playlist
-    # Its just something to give you guys and idea on how to use the library
-
-    print("Enter a Spotify URL (track, album, or playlist)\n")
-
-    url = input("[Spotify URL]:> ").strip()
-
-    print("\nStarting download...\n")
-    # The downloader function will handle everything:
-    # Downloading the songs, validiating if the URl is valid Etc
-    stats = downloader.download_playlist(url)
-
-    # Print results
-    print("\n" + "="*50)
-    print(f"Download Complete!")
-    print(f"Total tracks: {stats['total']}")
-    print(f"Successfully downloaded: {stats['successful']}")
-    print(f"Failed: {stats['failed']}")
-    print("="*50)
