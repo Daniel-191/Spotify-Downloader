@@ -17,6 +17,8 @@ Project End Date: xx/xx/xx
 # Import the spotify class thing
 from spotify_lib import SpotifyDownloader
 
+import gradio
+
 if __name__ == "__main__":
     downloader = SpotifyDownloader(download_dir='downloaded')
 
