@@ -168,6 +168,7 @@ This project uses the following Python packages:
 | [requests](https://requests.readthedocs.io/) | HTTP requests to Spotify |
 | [colorama](https://github.com/tartley/colorama) | Colored terminal output |
 | [urllib3](https://urllib3.readthedocs.io/) | HTTP client utilities |
+| [gradio](https://www.gradio.app) | Webpage |
 
 **External Dependencies:**
 - [FFmpeg](https://ffmpeg.org/) - Audio conversion (must be installed separately)
