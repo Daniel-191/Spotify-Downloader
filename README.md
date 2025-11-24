@@ -54,9 +54,7 @@ cd collaborative
 You'll need `ffmpeg` installed and accessible in your system PATH.
 
 - **Windows:**
-  1. Download from [ffmpeg.org](https://ffmpeg.org/download.html)
-  2. Extract the ZIP file (e.g., `ffmpeg-6.0-full_build`)
-  3. Add the `bin` folder to your PATH environment variable
+- Due to Ffmpeg being a bit of a pain to install, we fully recommened watching this video for window users: https://www.youtube.com/watch?v=jZLqNocSQDM&t=33s
 
 - **macOS (Homebrew):**
   ```bash
