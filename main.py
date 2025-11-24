@@ -17,10 +17,22 @@ Project End Date: xx/xx/xx
 # Import the spotify class thing
 from spotify_lib import SpotifyDownloader
 
-import gradio
+import gradio as gr
+
+def greet(name, intensity):
+    return "Hello, " + name + "!" * int(intensity)
 
 if __name__ == "__main__":
     downloader = SpotifyDownloader(download_dir='downloaded')
+
+    demo = gr.Interface(
+        fn=greet,
+        inputs=["text", "slider"],
+        outputs=["text"],
+        api_name="predict"
+    )
+
+    demo.launch() # add share=True if u want to share the demo
 
     # write your code here!! (OOP)
 
