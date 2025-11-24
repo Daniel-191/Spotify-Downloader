@@ -33,14 +33,14 @@ for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
 echo [SUCCESS] Python %PYTHON_VERSION% found
 echo.
 
-:: Check Python version is 3.7+
+:: Check Python version is 3.10+
 for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
     set MAJOR=%%a
     set MINOR=%%b
 )
 
 if !MAJOR! LSS 3 (
-    echo [ERROR] Python 3.7 or higher is required
+    echo [ERROR] Python 3.10 or higher is required
     echo Current version: %PYTHON_VERSION%
     echo Please upgrade Python
     pause
@@ -48,7 +48,7 @@ if !MAJOR! LSS 3 (
 )
 
 if !MAJOR! EQU 3 if !MINOR! LSS 7 (
-    echo [ERROR] Python 3.7 or higher is required
+    echo [ERROR] Python 3.10 or higher is required
     echo Current version: %PYTHON_VERSION%
     echo Please upgrade Python
     pause

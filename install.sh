@@ -24,7 +24,7 @@ elif command -v python &> /dev/null; then
 else
     echo -e "${RED}${ERROR} Python is not installed${NC}"
     echo ""
-    echo "Please install Python 3.7 or higher:"
+    echo "Please install Python 3.10 or higher:"
     if [[ "$OS_TYPE" == "Darwin" ]]; then
         echo "  macOS: brew install python3"
         echo "  Or download from: https://www.python.org/downloads/"
@@ -40,12 +40,12 @@ PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | awk '{print $2}')
 echo -e "${GREEN}[SUCCESS] Python ${PYTHON_VERSION} found${NC}"
 echo ""
 
-# Check Python version is 3.7+
+# Check Python version is 3.10+
 MAJOR_VERSION=$($PYTHON_CMD -c 'import sys; print(sys.version_info.major)')
 MINOR_VERSION=$($PYTHON_CMD -c 'import sys; print(sys.version_info.minor)')
 
 if [[ $MAJOR_VERSION -lt 3 ]] || [[ $MAJOR_VERSION -eq 3 && $MINOR_VERSION -lt 7 ]]; then
-    echo -e "${RED}${ERROR} Python 3.7 or higher is required${NC}"
+    echo -e "${RED}${ERROR} Python 3.10 or higher is required${NC}"
     echo "Current version: ${PYTHON_VERSION}"
     echo "Please upgrade Python"
     exit 1

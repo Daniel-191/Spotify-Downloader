@@ -19,7 +19,7 @@ This script takes a **Spotify link** (album, playlist, or track) and downloads t
 
 ## 📦 Requirements
 Make sure you have the following before starting:
-- [Python 3.7+](https://www.python.org/downloads/)
+- [Python 3.10+](https://www.python.org/downloads/)
 - [ffmpeg](https://ffmpeg.org/download.html) (required for MP3 conversion)
 - Internet connection (to fetch from Spotify + YouTube)
 
