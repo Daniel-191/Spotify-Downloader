@@ -10,13 +10,23 @@ SUPPORTED AUDIO FORMATS:
     - 'alac' : Apple Lossless
 
 QUALITY LEVELS (in kbps):
-    Low Quality:    '96'  - Acceptable for speech/podcasts
-    Standard:       '128' - Minimum for music
-    Good:           '192' - Default, good balance (recommended)
-    High:           '256' - Very good quality
-    Premium:        '320' - Maximum for lossy formats (MP3/AAC)
+    'auto'          - Automatically tries highest quality, falls back if needed (default)
+    '320'           - Maximum for lossy formats (MP3/AAC)
+    '256'           - Very good quality
+    '192'           - Good balance
+    '128'           - Minimum for music
+    '96'            - Acceptable for speech/podcasts
 
     For FLAC/ALAC: Use '0' for best lossless quality
+
+QUALITY FALLBACK:
+    When quality='auto' (default), the downloader will automatically:
+    1. Try 320 kbps first
+    2. If unavailable, try 256 kbps
+    3. If unavailable, try 192 kbps
+    4. Continue until successful or all options exhausted
+
+    This ensures you always get the highest quality available for each track!
 """
 
 import yt_dlp
@@ -39,8 +49,19 @@ init(autoreset=True) # colorama
 
 
 class SpotifyDownloader:
-    def __init__(self, download_dir='downloaded'):
+    # Quality fallback order (highest to lowest)
+    QUALITY_FALLBACK = ['320', '256', '192', '128', '96']
+
+    def __init__(self, download_dir='downloaded', auto_fallback=True):
+        """
+        Initialize SpotifyDownloader
+
+        Args:
+            download_dir (str): Directory to save downloads
+            auto_fallback (bool): Automatically try lower quality if highest fails (default: True)
+        """
         self.download_dir = download_dir
+        self.auto_fallback = auto_fallback
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -351,64 +372,96 @@ class SpotifyDownloader:
             filename = os.path.basename(d['filename'])
             print(f"\n{Fore.GREEN}{Style.BRIGHT}✓ Completed: {Fore.WHITE}{filename}")
 
-    def download_track(self, query, audio_format='mp3', quality='192'):
+    def download_track(self, query, audio_format='mp3', quality='auto'):
         """
-        Download a single track from YouTube
+        Download a single track from YouTube with automatic quality fallback
 
         Args:
             query (str): Search query (e.g., "Artist - Title")
             audio_format (str): Output audio format (default: 'mp3')
-            quality (str): Audio quality in kbps (default: '192')
+            quality (str): Audio quality in kbps or 'auto' for best available (default: 'auto')
 
         Returns:
             bool: True if successful, False otherwise
         """
         print(f"{Fore.CYAN}Searching for: {Fore.WHITE}'{query}'")
 
-        ydl_opts = {
-            "format": "bestaudio/best",
-            "outtmpl": f"{self.download_dir}/%(title)s.%(ext)s",
-            "noplaylist": True,
-            "progress_hooks": [self.progress_hook],
-            "quiet": True,
-            "no_warnings": True,
-            "extractaudio": True,
-            "audioformat": audio_format,
-            "audioquality": f"{quality}K",
-            "postprocessors": [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': audio_format,
-                'preferredquality': quality,
-            }]
-        }
+        # Determine quality levels to try
+        if quality == 'auto' and self.auto_fallback:
+            quality_levels = self.QUALITY_FALLBACK
+            self.print_info("Auto quality mode: Will try highest quality available")
+        elif quality != 'auto' and self.auto_fallback:
+            # Start with specified quality, then fallback to lower
+            try:
+                start_index = self.QUALITY_FALLBACK.index(quality)
+                quality_levels = self.QUALITY_FALLBACK[start_index:]
+            except ValueError:
+                quality_levels = [quality]
+        else:
+            quality_levels = [quality if quality != 'auto' else '192']
 
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                search_query = f"ytsearch1:{query}"
-                info = ydl.extract_info(search_query, download=False)
+        last_error = None
 
-                if 'entries' in info and len(info['entries']) > 0:
-                    video = info['entries'][0]
-                    video_title = video['title']
-                    print(f"{Fore.GREEN}✓ Found: {Fore.WHITE}{video_title}")
-                    ydl.download([search_query])
-                    return True
+        # Try each quality level
+        for attempt_quality in quality_levels:
+            try:
+                if len(quality_levels) > 1:
+                    print(f"{Fore.YELLOW}Attempting {attempt_quality} kbps...")
+
+                ydl_opts = {
+                    "format": "bestaudio/best",
+                    "outtmpl": f"{self.download_dir}/%(title)s.%(ext)s",
+                    "noplaylist": True,
+                    "progress_hooks": [self.progress_hook],
+                    "quiet": True,
+                    "no_warnings": True,
+                    "extractaudio": True,
+                    "audioformat": audio_format,
+                    "audioquality": f"{attempt_quality}K",
+                    "postprocessors": [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': audio_format,
+                        'preferredquality': attempt_quality,
+                    }]
+                }
+
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    search_query = f"ytsearch1:{query}"
+                    info = ydl.extract_info(search_query, download=False)
+
+                    if 'entries' in info and len(info['entries']) > 0:
+                        video = info['entries'][0]
+                        video_title = video['title']
+                        print(f"{Fore.GREEN}✓ Found: {Fore.WHITE}{video_title}")
+                        ydl.download([search_query])
+
+                        if len(quality_levels) > 1:
+                            self.print_success(f"Downloaded at {attempt_quality} kbps")
+                        return True
+                    else:
+                        self.print_error(f"No results found for: {query}")
+                        return False
+
+            except Exception as e:
+                last_error = str(e)
+                if len(quality_levels) > 1 and attempt_quality != quality_levels[-1]:
+                    self.print_warning(f"{attempt_quality} kbps failed, trying lower quality...")
+                    continue
                 else:
-                    self.print_error(f"No results found for: {query}")
-                    return False
+                    break
 
-        except Exception as e:
-            self.print_error(f"Download failed: {str(e)[:50]}...")
-            return False
+        # All attempts failed
+        self.print_error(f"Download failed: {last_error[:50] if last_error else 'Unknown error'}...")
+        return False
 
-    def download_playlist(self, url, audio_format='mp3', quality='192'):
+    def download_playlist(self, url, audio_format='mp3', quality='auto'):
         """
         Download all tracks from a Spotify playlist
 
         Args:
             url (str): Spotify URL (track, album, or playlist)
             audio_format (str): Output audio format (default: 'mp3')
-            quality (str): Audio quality in kbps (default: '192')
+            quality (str): Audio quality in kbps or 'auto' for best available (default: 'auto')
 
         Returns:
             dict: Download statistics {'total': int, 'successful': int, 'failed': int}
