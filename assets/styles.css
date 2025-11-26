@@ -25,12 +25,33 @@ h2, p {
 }
 
 /* --- INPUT TEXTBOX --- */
-.gr-text-input textarea {
+.gr-text-input textarea,
+.gr-text-input input {
     background: #222 !important;
     color: #0ff !important;
     border: 1px solid #444 !important;
     border-radius: 10px !important;
     padding: 12px !important;
+}
+
+/* Remove spinner arrows from ALL inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button,
+textarea::-webkit-outer-spin-button,
+textarea::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    display: none !important;
+}
+
+input[type=number],
+textarea[type=number] {
+    -moz-appearance: textfield !important;
+}
+
+/* Remove resize handle from textarea */
+textarea {
+    resize: none !important;
 }
 
 /* --- OUTPUT BOX --- */
@@ -91,14 +112,93 @@ button {
     padding: 10px 16px !important;
     border: none !important;
     transition: 0.2s ease-in-out !important;
+    overflow: hidden !important;
 }
 
 button:hover {
-    transform: scale(1.04) !important;
+    transform: scale(1.015) !important;
     opacity: 0.9 !important;
 }
 
 /* --- CARD / CONTAINER LOOK FOR BLOCKS --- */
 .gr-block {
     border-radius: 16px !important;
+}
+
+/* --- ADVANCED SETTINGS ACCORDION --- */
+.gr-accordion {
+    background: #1a1a1a !important;
+    border: 2px solid #00ffcc !important;
+    border-radius: 12px !important;
+    margin: 15px 0 !important;
+}
+
+.gr-accordion summary {
+    background: linear-gradient(135deg, #1a1a1a, #252525) !important;
+    color: #00ffcc !important;
+    font-weight: 600 !important;
+    padding: 12px 18px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid #00ffcc40 !important;
+    text-align: center !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.gr-accordion summary::marker,
+.gr-accordion summary::-webkit-details-marker {
+    display: none !important;
+}
+
+.gr-accordion summary:hover {
+    background: linear-gradient(135deg, #252525, #2a2a2a) !important;
+    border-color: #00ffcc !important;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.2) !important;
+}
+
+.gr-accordion[open] summary {
+    border-bottom: 1px solid #00ffcc40 !important;
+    border-radius: 10px 10px 0 0 !important;
+    background: linear-gradient(135deg, #00ffcc15, #00ffcc08) !important;
+}
+
+/* --- DROPDOWN STYLING --- */
+.gr-dropdown {
+    background: #222 !important;
+    border: 1px solid #444 !important;
+    border-radius: 10px !important;
+    margin: 10px 0 !important;
+}
+
+.gr-dropdown label {
+    color: #00d9ff !important;
+    font-weight: 500 !important;
+    margin-bottom: 8px !important;
+}
+
+.gr-dropdown select,
+.gr-dropdown input {
+    background: #2a2a2a !important;
+    color: #00ffcc !important;
+    border: 1px solid #00ffcc40 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.gr-dropdown select:hover,
+.gr-dropdown input:hover {
+    border-color: #00ffcc !important;
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.15) !important;
+}
+
+.gr-dropdown select:focus,
+.gr-dropdown input:focus {
+    border-color: #00ffcc !important;
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.3) !important;
+    outline: none !important;
 }
