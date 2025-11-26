@@ -18,93 +18,183 @@ import argparse
 from spotify_lib import SpotifyDownloader
 import gradio as gr
 
+
+# --------------------------------------------------------
+# CSS TO MAKE WEBSITE LOOK NICE, IMPORTANTS TO TRY AND OVERIDE GRADIO
+# --------------------------------------------------------
+
+custom_css = """
+/* --- GLOBAL PAGE STYLING --- */
+body {
+    background: #fffff !important;
+}
+
+/* --- MAIN APP BACKGROUND --- */
+.gradio-container {
+    background: #fffff !important;
+    color: #EEE;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- TITLE STYLING --- */
+h1 {
+    text-align: center;
+    font-size: 2.2rem !important;
+    color: #00ffcc !important;
+    margin-bottom: 10px !important;
+}
+
+/* --- DESCRIPTION TEXT --- */
+h2, p {
+    text-align: center;
+    color: #bbb !important;
+}
+
+/* --- INPUT TEXTBOX --- */
+.gr-text-input textarea {
+    background: #222 !important;
+    color: #0ff !important;
+    border: 1px solid #444 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+}
+
+/* --- OUTPUT BOX --- */
+.gr-textbox textarea {
+    background: #181818 !important;
+    color: #c0ffc0 !important;
+    border: 1px solid #333 !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    font-size: 15px !important;
+}
+
+/* --- SUBMIT BUTTON --- */
+button {
+    background: linear-gradient(135deg, #00ffa6, #008cff) !important;
+    color: #000 !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    padding: 10px 16px !important;
+    border: none !important;
+    transition: 0.2s ease-in-out !important;
+}
+
+button:hover {
+    transform: scale(1.04) !important;
+    opacity: 0.9 !important;
+}
+
+/* --- CARD / CONTAINER LOOK FOR BLOCKS --- */
+.gr-block {
+    border-radius: 16px !important;
+}
+"""
+# --------------------------------------------------------
+
+
+
 def spotify_cli():
     """CLI interface for Spotify downloader"""
     parser = argparse.ArgumentParser(
-        description="Spotify Downloader CLI"  # Fixed: was 'descriptions'
+        description="Spotify Downloader CLI"
     )
     parser.add_argument(
         "link",
         help="Spotify track, album or playlist"
     )
-    args = parser.parse_args()  # Fixed: was missing ()
+    args = parser.parse_args()
     link = args.link
-    
-    print("\n - - - Spotify Downloader CLI - - - ")  # Fixed typo: Donwloader -> Downloader
+
+    print("\n - - - Spotify Downloader CLI - - - ")
     print(f"Processing ->: {link}")
     print(" --------------------------------------")
-    
+
     downloader = SpotifyDownloader(download_dir='downloaded')
-    
+
     try:
         stats = downloader.download_playlist(link)
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print(f"Download Complete!")
         print(f"Total tracks: {stats['total']}")
         print(f"Successfully downloaded: {stats['successful']}")
         print(f"Failed: {stats['failed']}")
-        print("="*50)
-    except Exception as e:  # Fixed: 'exception' -> 'Exception' (capital E)
+        print("=" * 50)
+    except Exception as e:
         print(f"\nSorry, an error has occurred: {e}")
+
 
 def download_spotify(spotify_url):
     """Gradio function to download Spotify content"""
     if not spotify_url or not spotify_url.strip():
         return "❌ Please enter a valid Spotify URL"
-    
+
     downloader = SpotifyDownloader(download_dir='downloaded')
-    
+
     try:
-        # The downloader function will handle everything:
-        # Downloading the songs, validating if the URL is valid etc
         stats = downloader.download_playlist(spotify_url)
 
-        # Print results to console
-        print("\n" + "="*50)
-        print(f"Download Complete!")
-        print(f"Total tracks: {stats['total']}")
-        print(f"Successfully downloaded: {stats['successful']}")
-        print(f"Failed: {stats['failed']}")
-        print("="*50)
-        
-        # Return formatted results to UI
         result = f"""
 ✅ Download Complete!
 
-📊 Statistics:
+📊 **Statistics**
 • Total tracks: {stats['total']}
-• Successfully downloaded: {stats['successful']}
+• Successful: {stats['successful']}
 • Failed: {stats['failed']}
 • Success rate: {(stats['successful']/stats['total']*100) if stats['total'] > 0 else 0:.1f}%
 
-📁 Files saved to: ./downloaded/
+📁 Saved to: `./downloaded/`
 
-(See console for detailed logs)
+🔎 See the console for detailed logs.
 """
+
         return result
-        
-    except Exception as e:  # Fixed: 'exception' -> 'Exception'
-        error_msg = f"❌ Error occurred: {str(e)}\n\nPlease check:\n• URL is valid\n• Internet connection is active\n• VPN is disabled (if applicable)"
-        print(f"\n⚠️ ERROR: {e}")
-        return error_msg
+
+    except Exception as e:
+        return f"""
+❌ Error Occurred: {str(e)}
+
+Please check:
+• URL is correct  
+• Internet connection  
+• Disable VPN if using one
+"""
 
 if __name__ == "__main__":
-    # Use this to get input from user
-    webpage_UI = gr.Interface(
-        fn=download_spotify,
-        inputs=gr.Textbox(
+    with gr.Blocks(title="Spotify Downloader") as webpage_UI:
+
+        gr.HTML(f"<style>{custom_css}</style>")
+
+        gr.Markdown("# 🎵 Spotify Downloader")
+        gr.Markdown("Download Spotify playlists, albums, or tracks.")
+
+        spotify_input = gr.Textbox(
             label="Spotify URL",
             placeholder="https://open.spotify.com/playlist/...",
-            lines=1
-        ),
-        outputs=gr.Textbox(
-            label="Results",
-            lines=10
-        ),
-        title="🎵 Spotify Downloader",
-        description="Download Spotify playlists, albums, or tracks. Paste your Spotify URL below and click Submit.",
-        api_name="download"  # Changed from "predict" to be more descriptive
-    )
+            lines=1,
+        )
 
-    # See gradio docs here: https://www.gradio.app/guides/quickstart
-    webpage_UI.launch()  # Add share=True if you want to share the demo globally
+        result_box = gr.Textbox(
+            label="Results",
+            lines=12,
+        )
+
+        submit_btn = gr.Button("Start Download")
+
+        submit_btn.click(fn=download_spotify, inputs=spotify_input, outputs=result_box)
+
+        gr.Markdown(
+            """
+            <p style="text-align: center; font-size: 15px; color: #bbb;">
+            Made with ❤️ by 
+            <a href="https://github.com/Daniel-191" style="color:#00ffcc; text-decoration:none;">Daniel-191</a>, 
+            <a href="https://github.com/ShellDrak3" style="color:#00ffcc; text-decoration:none;">ShellDrak3</a>, 
+            <a href="https://github.com/JayM2F" style="color:#00ffcc; text-decoration:none;">JayM2F</a>
+            </p>
+            """,
+        elem_id="credits"
+        )
+
+
+    webpage_UI.launch()
+
