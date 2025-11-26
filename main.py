@@ -15,6 +15,29 @@ Project End Date: xx/xx/xx
 > While on a VPN i got this error 'ERROR: [youtube] rvAGVO_A9ig: Sign in to confirm you’re not a bot.'
 """
 
+import argparse
+from spotify_lib import process_spotify_link
+
+def spotify_cli():
+    parser = argparse.ArgumentParser(
+        descriptions = "Spotify Downloader CLI")
+    parser.add_argument(
+        "link",
+        help="Spotify track, album or playlist"
+    )
+    args = parser.parse_args
+    link = args.link
+    
+    print("\n - - - Spotify Donwloader CLI - - - ")
+    print(f"processing ->: {link}")
+    print(" --------------------------------------")
+
+    try:
+        process_spotify_link(link)
+        print("\n Download is complete!")
+    except exception as e:
+        print(f"\n Sorry an error has occured: {e}")  
+
 # Import the spotify class thing
 from spotify_lib import SpotifyDownloader
 
