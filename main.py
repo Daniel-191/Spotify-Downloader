@@ -9,9 +9,10 @@ Project End Date: xx/xx/xx
 
 """
 ---TODO---
-> Build UI interface (tkinter or some sort of webpage)
-> I suggest using gradio for the web interface, gradio is easy af, tons of tutorials on youtube, and you can easily make it look good
-> Integrate with spotify_lib.py
+> Build GUI Interface (task for ShellDrak3 or JayM2F)
+> Build CLI/terminal version (Task for JayM2F)
+> Add logic to handle Download fail errors (Task for Daniel-191)
+> While on a VPN i got this error 'ERROR: [youtube] rvAGVO_A9ig: Sign in to confirm you’re not a bot.'
 """
 
 # Import the spotify class thing
