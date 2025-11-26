@@ -8,11 +8,14 @@ import warnings
 from colorama import Fore, Style, init # This library is to make the console look nice and everything
 import urllib3
 
+
 # Suppress any useless console warnings
 warnings.filterwarnings("ignore")
 urllib3.disable_warnings(urllib3.exceptions.NotOpenSSLWarning)
 
+
 init(autoreset=True) # colorama
+
 
 class SpotifyDownloader:
     def __init__(self, download_dir='downloaded'):
