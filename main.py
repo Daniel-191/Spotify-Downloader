@@ -43,7 +43,11 @@ def spotify_cli():
     print(f"Processing ->: {link}")
     print(" --------------------------------------")
 
-    downloader = SpotifyDownloader(download_dir='downloaded')
+    downloader = SpotifyDownloader(
+        download_dir='downloaded',
+        cookie_browser='chrome',
+        download_delay=3
+    )
 
     try:
         stats = downloader.download_playlist(link)
@@ -58,40 +62,94 @@ def spotify_cli():
 
 
 def download_spotify(spotify_url):
-    """Gradio function to download Spotify content"""
+    """Gradio function to download Spotify content with live progress"""
     if not spotify_url or not spotify_url.strip():
-        return "❌ Please enter a valid Spotify URL"
+        yield "<span style='color: #ff6b6b; font-weight: bold;'>❌ Please enter a valid Spotify URL</span>"
+        return
 
     downloader = SpotifyDownloader(download_dir='downloaded')
 
     try:
-        stats = downloader.download_playlist(spotify_url)
+        # Show fetching message
+        output = "<div style='font-family: monospace;'>"
+        output += "<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br><br>"
+        yield output + "</div>"
 
-        result = f"""
-✅ Download Complete!
+        # Validate and get tracks
+        if not downloader.validate_url(spotify_url):
+            output += "<span style='color: #ff6b6b; font-weight: bold;'>✗ Invalid Spotify URL</span><br>"
+            yield output + "</div>"
+            return
 
-📊 **Statistics**
-• Total tracks: {stats['total']}
-• Successful: {stats['successful']}
-• Failed: {stats['failed']}
-• Success rate: {(stats['successful']/stats['total']*100) if stats['total'] > 0 else 0:.1f}%
+        tracks = downloader.get_tracks_from_url(spotify_url)
 
-📁 Saved to: `./downloaded/`
+        if not tracks:
+            output += "<span style='color: #ff6b6b; font-weight: bold;'>✗ No tracks found</span><br>"
+            yield output + "</div>"
+            return
 
-🔎 See the console for detailed logs.
-"""
+        output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
 
-        return result
+        # Initialize track list
+        track_lines = []
+        for i, track in enumerate(tracks, 1):
+            track_lines.append(f"<span id='track-{i}'><span style='color: #888888;'>{i}. {track} - Waiting...</span></span>")
+
+        output += "<br>".join(track_lines) + "<br>"
+        yield output + "</div>"
+
+        # Download each track
+        successful = 0
+        failed = 0
+
+        for i, track in enumerate(tracks, 1):
+            # Update current track to "Downloading"
+            track_lines[i-1] = f"<span style='color: #00d9ff;'>{i}. {track} - Downloading - 0%</span>"
+            output = "<div style='font-family: monospace;'>"
+            output += f"<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br>"
+            output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
+            output += "<br>".join(track_lines) + "<br>"
+            yield output + "</div>"
+
+            # Attempt download
+            success = downloader.download_track(track, audio_format='mp3', quality='auto')
+
+            # Update track to final status
+            if success:
+                track_lines[i-1] = f"<span style='color: #00ff88; font-weight: bold;'>{i}. {track} - Downloaded - 100%</span>"
+                successful += 1
+            else:
+                track_lines[i-1] = f"<span style='color: #ff6b6b; font-weight: bold;'>{i}. {track} - Failed</span>"
+                failed += 1
+
+            output = "<div style='font-family: monospace;'>"
+            output += f"<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br><br>"
+            output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
+            output += "<br>".join(track_lines) + "<br>"
+            yield output + "</div>"
+
+        # Final summary
+        total = len(tracks)
+        success_rate = (successful/total*100) if total > 0 else 0
+
+        output += "<br><br><span style='color: #00ff88; font-size: 16px; font-weight: bold;'>✅ Download Complete!</span><br><br>"
+        output += "<span style='color: #00d9ff; font-weight: bold;'>📊 Statistics</span><br>"
+        output += f"<span style='color: #ffffff;'>• Total: {total}</span> | "
+        output += f"<span style='color: #00ff88;'>Successful: {successful}</span> | "
+        output += f"<span style='color: #ff6b6b;'>Failed: {failed}</span> | "
+        output += f"<span style='color: #ffaa00;'>Success rate: {success_rate:.1f}%</span><br>"
+        output += f"<span style='color: #888888;'>📁 Saved to: ./downloaded/</span>"
+
+        yield output + "</div>"
 
     except Exception as e:
-        return f"""
-❌ Error Occurred: {str(e)}
-
-Please check:
-• URL is correct  
-• Internet connection  
-• Disable VPN if using one
-"""
+        output = "<div style='font-family: monospace;'>"
+        output += f"<span style='color: #ff6b6b; font-weight: bold;'>❌ Error Occurred: {str(e)}</span><br><br>"
+        output += "<span style='color: #ffffff;'>Please check:</span><br>"
+        output += "<span style='color: #ffffff;'>• URL is correct</span><br>"
+        output += "<span style='color: #ffffff;'>• Internet connection</span><br>"
+        output += "<span style='color: #ffffff;'>• Chrome browser is closed (needed for cookie extraction)</span>"
+        yield output + "</div>"
 
 if __name__ == "__main__":
     with gr.Blocks(title="Spotify Downloader") as webpage_UI:
@@ -107,9 +165,9 @@ if __name__ == "__main__":
             lines=1,
         )
 
-        result_box = gr.Textbox(
+        result_box = gr.HTML(
             label="Results",
-            lines=12,
+            value="<span style='color: #888888;'>Enter a Spotify URL and click Start Download...</span>"
         )
 
         submit_btn = gr.Button("Start Download")

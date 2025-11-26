@@ -43,6 +43,41 @@ h2, p {
     font-size: 15px !important;
 }
 
+/* --- HTML OUTPUT BOX (for colored progress) --- */
+.gr-html {
+    background: #1a1a1a !important;
+    border: 2px solid #00ffcc !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    font-family: 'Consolas', 'Monaco', monospace !important;
+    font-size: 14px !important;
+    line-height: 1.8 !important;
+    min-height: 400px !important;
+    max-height: 600px !important;
+    overflow-y: auto !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 6px rgba(0, 255, 204, 0.1) !important;
+}
+
+/* Scrollbar styling for output box */
+.gr-html::-webkit-scrollbar {
+    width: 10px !important;
+}
+
+.gr-html::-webkit-scrollbar-track {
+    background: #0a0a0a !important;
+    border-radius: 10px !important;
+}
+
+.gr-html::-webkit-scrollbar-thumb {
+    background: #00ffcc !important;
+    border-radius: 10px !important;
+}
+
+.gr-html::-webkit-scrollbar-thumb:hover {
+    background: #00d9aa !important;
+}
+
 /* --- SUBMIT BUTTON --- */
 button {
     background: linear-gradient(135deg, #00ffa6, #008cff) !important;
