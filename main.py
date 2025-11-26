@@ -10,7 +10,6 @@ Project End Date: xx/xx/xx
 """
 ---TODO---
 > Build GUI Interface (task for ShellDrak3 or JayM2F)
-> Build CLI/terminal version (Task for JayM2F)
 > Add logic to handle Download fail errors (Task for Daniel-191)
 > While on a VPN i got this error 'ERROR: [youtube] rvAGVO_A9ig: Sign in to confirm you’re not a bot.'
 """
@@ -31,10 +30,11 @@ def spotify_cli():
     print("\n - - - Spotify Donwloader CLI - - - ")
     print(f"processing ->: {link}")
     print(" --------------------------------------")
-
+    
+    downloader = SpotifyDownloader(download_dir='downloaded')
+    
     try:
-        process_spotify_link(link)
-        print("\n Download is complete!")
+        downloader.download_playlist(link)
     except exception as e:
         print(f"\n Sorry an error has occured: {e}")  
 
