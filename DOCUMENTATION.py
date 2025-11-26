@@ -1,5 +1,26 @@
 # DOCUMENTATION!!!!!
 
+"""
+SUPPORTED AUDIO FORMATS:
+    - 'mp3'  : Most compatible, works everywhere (default)
+    - 'aac'  : Better quality than MP3 at same bitrate
+    - 'm4a'  : Apple's format, good quality
+    - 'opus' : Best quality/size ratio, modern format
+    - 'vorbis': Open source, good quality
+    - 'flac' : Lossless, best quality but large files
+    - 'wav'  : Uncompressed, huge files
+    - 'alac' : Apple Lossless
+
+QUALITY LEVELS (in kbps):
+    Low Quality:    '96'  - Acceptable for speech/podcasts
+    Standard:       '128' - Minimum for music
+    Good:           '192' - Default, good balance (recommended)
+    High:           '256' - Very good quality
+    Premium:        '320' - Maximum for lossy formats (MP3/AAC)
+
+    For FLAC/ALAC: Use '0' for best lossless quality
+"""
+
 # This is how you download a single song/track
 # downloader.download_track("Artist Name - Song Title")
 # That will start downloading the song and save it to downloaded dict
