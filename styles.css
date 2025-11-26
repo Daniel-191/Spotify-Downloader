@@ -44,7 +44,7 @@ h2, p {
 }
 
 /* --- HTML OUTPUT BOX (for colored progress) --- */
-.gr-html {
+.result-output iframe {
     background: #1a1a1a !important;
     border: 2px solid #00ffcc !important;
     border-radius: 12px !important;
@@ -59,22 +59,26 @@ h2, p {
     box-shadow: 0 4px 6px rgba(0, 255, 204, 0.1) !important;
 }
 
+.result-output {
+    border: none !important;
+}
+
 /* Scrollbar styling for output box */
-.gr-html::-webkit-scrollbar {
+.result-output iframe::-webkit-scrollbar {
     width: 10px !important;
 }
 
-.gr-html::-webkit-scrollbar-track {
+.result-output iframe::-webkit-scrollbar-track {
     background: #0a0a0a !important;
     border-radius: 10px !important;
 }
 
-.gr-html::-webkit-scrollbar-thumb {
+.result-output iframe::-webkit-scrollbar-thumb {
     background: #00ffcc !important;
     border-radius: 10px !important;
 }
 
-.gr-html::-webkit-scrollbar-thumb:hover {
+.result-output iframe::-webkit-scrollbar-thumb:hover {
     background: #00d9aa !important;
 }
 

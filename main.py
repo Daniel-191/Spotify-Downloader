@@ -15,6 +15,7 @@ Project End Date: xx/xx/xx
 
 import argparse
 import os
+import time
 from spotify_lib import SpotifyDownloader
 import gradio as gr
 
@@ -63,29 +64,35 @@ def spotify_cli():
 
 def download_spotify(spotify_url):
     """Gradio function to download Spotify content with live progress"""
+
+    # Box wrapper style
+    box_wrapper = "<div style='background: #1a1a1a; border: 2px solid #00ffcc; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 14px; line-height: 1.8; min-height: 400px; color: #ffffff; box-shadow: 0 4px 6px rgba(0, 255, 204, 0.1);'>"
+    box_close = "</div>"
+
     if not spotify_url or not spotify_url.strip():
-        yield "<span style='color: #ff6b6b; font-weight: bold;'>❌ Please enter a valid Spotify URL</span>"
+        yield f"{box_wrapper}<span style='color: #ff6b6b; font-weight: bold;'> Please enter a valid Spotify URL</span>{box_close}"
         return
 
     downloader = SpotifyDownloader(download_dir='downloaded')
 
     try:
         # Show fetching message
-        output = "<div style='font-family: monospace;'>"
-        output += "<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br><br>"
-        yield output + "</div>"
+        output = "<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br>"
+        print(f"DEBUG: Yielding initial message")  # Debug
+        yield f"{box_wrapper}{output}{box_close}"
+        time.sleep(0.1)  # Small delay for UI update
 
         # Validate and get tracks
         if not downloader.validate_url(spotify_url):
             output += "<span style='color: #ff6b6b; font-weight: bold;'>✗ Invalid Spotify URL</span><br>"
-            yield output + "</div>"
+            yield f"{box_wrapper}{output}{box_close}"
             return
 
         tracks = downloader.get_tracks_from_url(spotify_url)
 
         if not tracks:
             output += "<span style='color: #ff6b6b; font-weight: bold;'>✗ No tracks found</span><br>"
-            yield output + "</div>"
+            yield f"{box_wrapper}{output}{box_close}"
             return
 
         output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
@@ -93,23 +100,27 @@ def download_spotify(spotify_url):
         # Initialize track list
         track_lines = []
         for i, track in enumerate(tracks, 1):
-            track_lines.append(f"<span id='track-{i}'><span style='color: #888888;'>{i}. {track} - Waiting...</span></span>")
+            track_lines.append(f"<span style='color: #888888;'>{i}. {track} - Waiting...</span>")
 
         output += "<br>".join(track_lines) + "<br>"
-        yield output + "</div>"
+        yield f"{box_wrapper}{output}{box_close}"
+        time.sleep(0.1)
 
         # Download each track
         successful = 0
         failed = 0
 
         for i, track in enumerate(tracks, 1):
-            # Update current track to "Downloading"
-            track_lines[i-1] = f"<span style='color: #00d9ff;'>{i}. {track} - Downloading - 0%</span>"
-            output = "<div style='font-family: monospace;'>"
-            output += f"<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br>"
-            output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
-            output += "<br>".join(track_lines) + "<br>"
-            yield output + "</div>"
+            # Animate progress from 0% to 95%
+            progress_steps = [0, 15, 35, 50, 65, 80, 95]
+
+            for progress in progress_steps:
+                track_lines[i-1] = f"<span style='color: #00d9ff;'>{i}. {track} - Downloading - {progress}%</span>"
+                output = f"<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br>"
+                output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
+                output += "<br>".join(track_lines) + "<br>"
+                yield f"{box_wrapper}{output}{box_close}"
+                time.sleep(0.15)  # Quick animation
 
             # Attempt download
             success = downloader.download_track(track, audio_format='mp3', quality='auto')
@@ -122,11 +133,11 @@ def download_spotify(spotify_url):
                 track_lines[i-1] = f"<span style='color: #ff6b6b; font-weight: bold;'>{i}. {track} - Failed</span>"
                 failed += 1
 
-            output = "<div style='font-family: monospace;'>"
-            output += f"<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br><br>"
+            output = f"<span style='color: #00d9ff; font-weight: bold;'>• Fetching track list from Spotify...</span><br>"
             output += f"<span style='color: #00ff88; font-weight: bold;'>✓ Found {len(tracks)} track(s)</span><br><br>"
             output += "<br>".join(track_lines) + "<br>"
-            yield output + "</div>"
+            yield f"{box_wrapper}{output}{box_close}"
+            time.sleep(0.1)
 
         # Final summary
         total = len(tracks)
@@ -140,16 +151,15 @@ def download_spotify(spotify_url):
         output += f"<span style='color: #ffaa00;'>Success rate: {success_rate:.1f}%</span><br>"
         output += f"<span style='color: #888888;'>📁 Saved to: ./downloaded/</span>"
 
-        yield output + "</div>"
+        yield f"{box_wrapper}{output}{box_close}"
 
     except Exception as e:
-        output = "<div style='font-family: monospace;'>"
-        output += f"<span style='color: #ff6b6b; font-weight: bold;'>❌ Error Occurred: {str(e)}</span><br><br>"
+        output = f"<span style='color: #ff6b6b; font-weight: bold;'>Error Occurred: {str(e)}</span><br><br>"
         output += "<span style='color: #ffffff;'>Please check:</span><br>"
         output += "<span style='color: #ffffff;'>• URL is correct</span><br>"
         output += "<span style='color: #ffffff;'>• Internet connection</span><br>"
         output += "<span style='color: #ffffff;'>• Chrome browser is closed (needed for cookie extraction)</span>"
-        yield output + "</div>"
+        yield f"{box_wrapper}{output}{box_close}"
 
 if __name__ == "__main__":
     with gr.Blocks(title="Spotify Downloader") as webpage_UI:
@@ -167,12 +177,17 @@ if __name__ == "__main__":
 
         result_box = gr.HTML(
             label="Results",
-            value="<span style='color: #888888;'>Enter a Spotify URL and click Start Download...</span>"
+            elem_classes="result-output"
         )
 
         submit_btn = gr.Button("Start Download")
 
-        submit_btn.click(fn=download_spotify, inputs=spotify_input, outputs=result_box)
+        submit_btn.click(
+            fn=download_spotify,
+            inputs=spotify_input,
+            outputs=result_box,
+            show_progress=True
+        )
 
         gr.Markdown(
             """
