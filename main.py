@@ -11,87 +11,20 @@ Project End Date: xx/xx/xx
 ---TODO---
 > Build GUI Interface (task for ShellDrak3 or JayM2F)
 > Add logic to handle Download fail errors (Task for Daniel-191)
-> While on a VPN i got this error 'ERROR: [youtube] rvAGVO_A9ig: Sign in to confirm you're not a bot.'
 """
 
 import argparse
+import os
 from spotify_lib import SpotifyDownloader
 import gradio as gr
 
 
-# --------------------------------------------------------
-# CSS TO MAKE WEBSITE LOOK NICE, IMPORTANTS TO TRY AND OVERIDE GRADIO
-# --------------------------------------------------------
-
-custom_css = """
-/* --- GLOBAL PAGE STYLING --- */
-body {
-    background: #fffff !important;
-}
-
-/* --- MAIN APP BACKGROUND --- */
-.gradio-container {
-    background: #fffff !important;
-    color: #EEE;
-    font-family: 'Segoe UI', sans-serif;
-}
-
-/* --- TITLE STYLING --- */
-h1 {
-    text-align: center;
-    font-size: 2.2rem !important;
-    color: #00ffcc !important;
-    margin-bottom: 10px !important;
-}
-
-/* --- DESCRIPTION TEXT --- */
-h2, p {
-    text-align: center;
-    color: #bbb !important;
-}
-
-/* --- INPUT TEXTBOX --- */
-.gr-text-input textarea {
-    background: #222 !important;
-    color: #0ff !important;
-    border: 1px solid #444 !important;
-    border-radius: 10px !important;
-    padding: 12px !important;
-}
-
-/* --- OUTPUT BOX --- */
-.gr-textbox textarea {
-    background: #181818 !important;
-    color: #c0ffc0 !important;
-    border: 1px solid #333 !important;
-    border-radius: 12px !important;
-    padding: 12px !important;
-    font-size: 15px !important;
-}
-
-/* --- SUBMIT BUTTON --- */
-button {
-    background: linear-gradient(135deg, #00ffa6, #008cff) !important;
-    color: #000 !important;
-    font-weight: 600 !important;
-    border-radius: 12px !important;
-    padding: 10px 16px !important;
-    border: none !important;
-    transition: 0.2s ease-in-out !important;
-}
-
-button:hover {
-    transform: scale(1.04) !important;
-    opacity: 0.9 !important;
-}
-
-/* --- CARD / CONTAINER LOOK FOR BLOCKS --- */
-.gr-block {
-    border-radius: 16px !important;
-}
-"""
-# --------------------------------------------------------
-
+def load_css(file_path='styles.css'):
+    """Load CSS from external file"""
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    return ""
 
 
 def spotify_cli():
@@ -163,7 +96,7 @@ Please check:
 if __name__ == "__main__":
     with gr.Blocks(title="Spotify Downloader") as webpage_UI:
 
-        gr.HTML(f"<style>{custom_css}</style>")
+        gr.HTML(f"<style>{load_css()}</style>")
 
         gr.Markdown("# 🎵 Spotify Downloader")
         gr.Markdown("Download Spotify playlists, albums, or tracks.")
