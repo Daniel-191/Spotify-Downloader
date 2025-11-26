@@ -201,6 +201,11 @@ class SpotifyDownloader:
             except Exception as e:
                 self.print_error(f"Error with {name}: {str(e)[:50]}...")
 
+        # For playlists/albums with many tracks, skip the first one (usually metadata)
+        if len(tracks) > 10 and (content_type == 'playlist' or content_type == 'album'):
+            tracks = tracks[1:]
+            self.print_info(f"Filtered playlist metadata, {len(tracks)} tracks remaining")
+
         return tracks
 
     def try_oembed_api(self, content_type, spotify_id, url):
@@ -280,7 +285,6 @@ class SpotifyDownloader:
         patterns = [
             r'"@type":"MusicRecording".*?"name":"([^"]+)".*?"byArtist".*?"name":"([^"]+)"',
             r'<meta property="music:song" content="([^"]+)"',
-            r'<meta property="og:title" content="([^"]*?(?:by|-).*?)"',
             r'itemprop="name"[^>]*>([^<]+)<.*?itemprop="byArtist"[^>]*>([^<]+)<',
             r'"track":{"uri":"spotify:track:[^"]*","name":"([^"]+)".*?"artists":\[{"name":"([^"]+)"',
             r'"name":"([^"]+)"[^}]*"artists":\[{"name":"([^"]+)"',
@@ -305,8 +309,15 @@ class SpotifyDownloader:
         # Remove duplicates and filter
         unique_tracks = []
         seen = set()
+
         for track in tracks:
             track_clean = re.sub(r'\s+', ' ', track).strip()
+            track_lower = track_clean.lower()
+
+            # Skip tracks that contain playlist/album keywords
+            if any(keyword in ['playlist', 'album', 'compilation'] for keyword in track_lower.split()):
+                continue
+
             if (track_clean not in seen and
                 len(track_clean) > 5 and
                 not track_clean.lower().startswith('spotify') and
@@ -314,7 +325,7 @@ class SpotifyDownloader:
                 seen.add(track_clean)
                 unique_tracks.append(track_clean)
 
-        return unique_tracks[:50]
+        return unique_tracks
 
     def extract_tracks_from_json(self, data):
         """Recursively extract tracks from JSON data"""
@@ -432,8 +443,15 @@ class SpotifyDownloader:
                     if 'entries' in info and len(info['entries']) > 0:
                         video = info['entries'][0]
                         video_title = video['title']
+                        video_url = video.get('webpage_url') or video.get('url') or video.get('id')
                         print(f"{Fore.GREEN}✓ Found: {Fore.WHITE}{video_title}")
-                        ydl.download([search_query])
+
+                        # Download the specific video we already found instead of searching again
+                        if video_url:
+                            ydl.extract_info(video_url, download=True)
+                        else:
+                            # Fallback to searching again if URL not available
+                            ydl.download([search_query])
 
                         if len(quality_levels) > 1:
                             self.print_success(f"Downloaded at {attempt_quality} kbps")
