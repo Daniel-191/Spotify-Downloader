@@ -16,7 +16,7 @@ def load_css(file_path='assets/styles.css'):
     return ""
 
 
-def download_spotify(spotify_url):
+def download_spotify(spotify_url, audio_format, quality):
     """Gradio function to download Spotify content with live progress"""
 
     # Box wrapper style
@@ -77,7 +77,7 @@ def download_spotify(spotify_url):
                 time.sleep(0.15)  # Quick animation
 
             # Attempt download
-            success = downloader.download_track(track, audio_format='mp3', quality='auto')
+            success = downloader.download_track(track, audio_format=audio_format.lower(), quality=quality)
 
             # Update track to final status
             if success:
@@ -131,6 +131,20 @@ def create_ui():
             lines=1,
         )
 
+        with gr.Accordion("Advanced Settings", open=False):
+            audio_format_dropdown = gr.Dropdown(
+                label="Audio Format",
+                choices=["MP3", "AAC", "M4A", "Opus", "Vorbis", "FLAC", "WAV", "ALAC"],
+                value="MP3",
+                interactive=True
+            )
+            quality_dropdown = gr.Dropdown(
+                label="Quality Preset",
+                choices=["auto", "320", "256", "192", "128", "96"],
+                value="auto",
+                interactive=True
+            )
+
         result_box = gr.HTML(
             label="Results",
             elem_classes="result-output"
@@ -140,7 +154,7 @@ def create_ui():
 
         submit_btn.click(
             fn=download_spotify,
-            inputs=spotify_input,
+            inputs=[spotify_input, audio_format_dropdown, quality_dropdown],
             outputs=result_box,
             show_progress=True
         )
