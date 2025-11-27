@@ -10,6 +10,8 @@ This script takes a **Spotify link** (album, playlist, or track) and downloads t
 - 📂 Downloads full **playlists**, **albums**, or single tracks
 - 🎶 Converts audio to **MP3** format using `ffmpeg`
 - 🎨 Beautiful **colored console output** with progress bars
+- 🖥️ **Modern PyQt6 GUI** - Clean, modern desktop interface
+- 🌐 **Web Interface** - Gradio-based web UI for browser access
 - ⚡ Simple setup with **automated installation scripts**
 - 🖥 Cross-platform support: **Windows**, **macOS**, **Linux**
 - 🔄 **Multiple extraction methods** - Tries different approaches to fetch track lists
@@ -90,9 +92,32 @@ You'll need `ffmpeg` installed and accessible in your system PATH.
 
 ## 🚀 Usage
 
-### Quick Start
+### Choose Your Interface
 
-Run the program with:
+This application offers three different interfaces:
+
+#### 1️⃣ Desktop GUI (PyQt6) - **Recommended**
+
+Launch the modern desktop application:
+
+```bash
+python gui.py
+# or
+python3 gui.py
+# or use the launcher
+python run_gui.py
+```
+
+Features:
+- 🎨 Modern, clean dark-themed interface
+- 📊 Real-time progress tracking
+- ⚙️ Advanced audio format settings
+- 📈 Live statistics display
+- 🖱️ Easy-to-use graphical controls
+
+#### 2️⃣ Web Interface (Gradio)
+
+Launch the web-based interface:
 
 ```bash
 python main.py
@@ -101,6 +126,16 @@ python3 main.py
 ```
 
 > **Note:** After running the installation script, you can also use `run.bat` (Windows) or `./run.sh` (macOS/Linux) as convenient shortcuts.
+
+Access through your browser at `http://localhost:7860`
+
+#### 3️⃣ Command Line Interface (CLI)
+
+For terminal users:
+
+```bash
+python cli.py "https://open.spotify.com/playlist/..."
+```
 
 ### Using the Downloader
 
@@ -139,8 +174,14 @@ Downloading ██████████████████████�
 ## 📂 Project Structure
 ```
 spotify-downloader/
-├── main.py                 # Main program entry point
-├── spotify_lib.py          # Core library for downloading
+├── main.py                 # Web UI entry point (Gradio)
+├── gui.py                  # Desktop GUI application (PyQt6)
+├── run_gui.py              # GUI launcher script
+├── ui.py                   # Web interface implementation
+├── cli.py                  # Command-line interface
+├── lib/
+│   └── spotify_lib.py      # Core library for downloading
+├── assets/                 # UI assets and styles
 ├── install.bat             # Windows installation script
 ├── install.sh              # macOS/Linux installation script
 ├── requirements.txt        # Python dependencies
@@ -175,7 +216,8 @@ This project uses the following Python packages:
 | [requests](https://requests.readthedocs.io/) | HTTP requests to Spotify |
 | [colorama](https://github.com/tartley/colorama) | Colored terminal output |
 | [urllib3](https://urllib3.readthedocs.io/) | HTTP client utilities |
-| [gradio](https://www.gradio.app) | Webpage |
+| [gradio](https://www.gradio.app) | Web interface |
+| [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) | Desktop GUI framework |
 
 **External Dependencies:**
 - [FFmpeg](https://ffmpeg.org/) - Audio conversion (must be installed separately)
