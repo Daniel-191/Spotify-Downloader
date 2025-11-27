@@ -8,13 +8,14 @@ from PyQt6.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, QProgressBar
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QIcon
+
 
 class SimpleGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Simple Test GUI")
-        self.setMinimumSize(700, 550)
+        self.setWindowTitle("Spotify Downloader")
+        self.setMinimumSize(650, 500)
 
         # Central widget
         central = QWidget()
@@ -22,12 +23,12 @@ class SimpleGUI(QMainWindow):
 
         # Main layout
         layout = QVBoxLayout(central)
-        layout.setSpacing(12)
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 12, 15, 12)
 
         # Title
-        title = QLabel("🎵 Spotify Downloader")
-        title.setStyleSheet("font-size: 20px; color: #00ffcc; font-weight: bold;")
+        title = QLabel("Spotify Downloader")
+        title.setStyleSheet("font-size: 18px; color: #00ffcc; font-weight: bold; padding: 8px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
@@ -38,7 +39,7 @@ class SimpleGUI(QMainWindow):
 
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("https://open.spotify.com/playlist/...")
-        self.url_input.setMinimumHeight(35)
+        self.url_input.setMinimumHeight(32)
         layout.addWidget(self.url_input)
 
         # Settings Section
@@ -49,11 +50,11 @@ class SimpleGUI(QMainWindow):
         settings_layout = QHBoxLayout()
 
         format_layout = QVBoxLayout()
-        format_layout.setSpacing(5)
+        format_layout.setSpacing(4)
         format_lbl = QLabel("Format:")
         self.format_combo = QComboBox()
         self.format_combo.addItems(["MP3", "AAC", "M4A", "Opus", "Vorbis", "FLAC", "WAV", "ALAC"])
-        self.format_combo.setMinimumHeight(30)
+        self.format_combo.setMinimumHeight(28)
         self.format_combo.setMaxVisibleItems(10)
         self.format_combo.setStyleSheet("""
             QComboBox {
@@ -81,11 +82,11 @@ class SimpleGUI(QMainWindow):
         format_layout.addWidget(self.format_combo)
 
         quality_layout = QVBoxLayout()
-        quality_layout.setSpacing(5)
+        quality_layout.setSpacing(4)
         quality_lbl = QLabel("Quality:")
         self.quality_combo = QComboBox()
         self.quality_combo.addItems(["auto", "320 kbps", "256 kbps", "192 kbps", "128 kbps", "96 kbps"])
-        self.quality_combo.setMinimumHeight(30)
+        self.quality_combo.setMinimumHeight(28)
         self.quality_combo.setMaxVisibleItems(10)
         self.quality_combo.setStyleSheet("""
             QComboBox {
@@ -122,7 +123,7 @@ class SimpleGUI(QMainWindow):
         layout.addWidget(progress_label)
 
         self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimumHeight(30)
+        self.progress_bar.setMinimumHeight(28)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 2px solid #444444;
@@ -146,7 +147,7 @@ class SimpleGUI(QMainWindow):
         layout.addWidget(self.status_label)
 
         self.download_btn = QPushButton("Start Download")
-        self.download_btn.setMinimumHeight(40)
+        self.download_btn.setMinimumHeight(36)
         self.download_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.download_btn.setStyleSheet("""
             QPushButton {
@@ -180,7 +181,7 @@ class SimpleGUI(QMainWindow):
         layout.addWidget(console_label)
 
         self.console = QTextEdit()
-        self.console.setFixedHeight(120)
+        self.console.setFixedHeight(100)
         self.console.setReadOnly(True)
         layout.addWidget(self.console)
 
@@ -244,6 +245,7 @@ class SimpleGUI(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
+
     window = SimpleGUI()
     window.show()
     sys.exit(app.exec())
