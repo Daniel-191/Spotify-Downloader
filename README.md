@@ -151,46 +151,6 @@ The script will:
 4. Convert to MP3 format
 5. Save to the `downloaded/` folder
 
-### Example
-```
-  SPOTIFY DOWNLOADER - INSTALLATION
-
-Enter Spotify URL (track, album, or playlist):
-Example: https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
-
-URL: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
-
-• Detected playlist with ID: 37i9dQZF1DXcBWIGoYBM5M
-✓ Found 50 tracks using Embed Page
-
-[1/50] Searching for: 'Artist Name - Song Title'
-✓ Found: Song Title - Artist Name
-Downloading ████████████████████████████ 100.0% | 1.2 MB/s | 00:00
-✓ Completed: Song Title.mp3
-```
-
----
-
-## 📂 Project Structure
-```
-spotify-downloader/
-├── main.py                 # Web UI entry point (Gradio)
-├── gui.py                  # Desktop GUI application (PyQt6)
-├── run_gui.py              # GUI launcher script
-├── ui.py                   # Web interface implementation
-├── cli.py                  # Command-line interface
-├── lib/
-│   └── spotify_lib.py      # Core library for downloading
-├── assets/                 # UI assets and styles
-├── install.bat             # Windows installation script
-├── install.sh              # macOS/Linux installation script
-├── requirements.txt        # Python dependencies
-├── README.md               # This file
-└── downloaded/             # Downloaded audio files (auto-created)
-```
-
-**Note:** `run.bat` and `run.sh` launcher scripts are automatically created after running the installation.
-
 ---
 
 ## 🖥 Supported Operating Systems
