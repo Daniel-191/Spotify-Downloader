@@ -4,3 +4,4 @@ colorama>=0.4.6
 urllib3>=2.0.0
 gradio>=6.0.0
 argparse
+PyQt6>=6.6.0
