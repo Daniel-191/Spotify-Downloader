@@ -360,6 +360,87 @@ class SpotifyDownloader:
         recursive_search(data)
         return tracks
 
+    def sanitize_folder_name(self, name):
+        """
+        Sanitize a folder name by removing invalid characters
+
+        Args:
+            name (str): Original folder name
+
+        Returns:
+            str: Sanitized folder name safe for filesystem
+        """
+        # Remove invalid characters for Windows/Mac/Linux
+        invalid_chars = r'[<>:"/\\|?*]'
+        sanitized = re.sub(invalid_chars, '', name)
+        # Remove leading/trailing spaces and dots
+        sanitized = sanitized.strip('. ')
+        # Replace multiple spaces with single space
+        sanitized = re.sub(r'\s+', ' ', sanitized)
+        # Limit length to 100 characters
+        if len(sanitized) > 100:
+            sanitized = sanitized[:100].strip()
+        return sanitized if sanitized else 'Unknown'
+
+    def get_playlist_name(self, url):
+        """
+        Extract playlist/album name from Spotify URL
+
+        Args:
+            url (str): Spotify URL
+
+        Returns:
+            str: Playlist/album name or None if not found
+        """
+        content_type, spotify_id = self.extract_spotify_id(url)
+
+        if not content_type or not spotify_id:
+            return None
+
+        # Only get names for playlists and albums
+        if content_type not in ['playlist', 'album']:
+            return None
+
+        try:
+            # Try oEmbed API first (fastest)
+            oembed_url = f"https://open.spotify.com/oembed?url={url}"
+            response = self.session.get(oembed_url, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                title = data.get('title', '')
+                if title:
+                    return self.sanitize_folder_name(title)
+        except:
+            pass
+
+        try:
+            # Try embed page
+            embed_url = f"https://open.spotify.com/embed/{content_type}/{spotify_id}"
+            response = self.session.get(embed_url, timeout=10)
+
+            if response.status_code == 200:
+                html = response.text
+
+                # Look for title in meta tags
+                patterns = [
+                    r'<meta property="og:title" content="([^"]+)"',
+                    r'<title>([^<]+)</title>',
+                    r'"name":"([^"]+)"[^}]*"type":"' + content_type,
+                ]
+
+                for pattern in patterns:
+                    match = re.search(pattern, html, re.IGNORECASE)
+                    if match:
+                        name = match.group(1).strip()
+                        # Remove "Spotify" suffix if present
+                        name = re.sub(r'\s*[-|]\s*Spotify.*$', '', name, flags=re.IGNORECASE)
+                        if name and len(name) > 2:
+                            return self.sanitize_folder_name(name)
+        except:
+            pass
+
+        return None
+
     # ===== Download Methods =====
 
     def progress_hook(self, d):
@@ -383,7 +464,7 @@ class SpotifyDownloader:
             filename = os.path.basename(d['filename'])
             print(f"\n{Fore.GREEN}{Style.BRIGHT}✓ Completed: {Fore.WHITE}{filename}")
 
-    def download_track(self, query, audio_format='mp3', quality='auto'):
+    def download_track(self, query, audio_format='mp3', quality='auto', subfolder=None):
         """
         Download a single track from YouTube with automatic quality fallback
 
@@ -391,11 +472,21 @@ class SpotifyDownloader:
             query (str): Search query (e.g., "Artist - Title")
             audio_format (str): Output audio format (default: 'mp3')
             quality (str): Audio quality in kbps or 'auto' for best available (default: 'auto')
+            subfolder (str): Optional subfolder name within download_dir (default: None)
 
         Returns:
             bool: True if successful, False otherwise
         """
         print(f"{Fore.CYAN}Searching for: {Fore.WHITE}'{query}'")
+
+        # Determine download directory
+        if subfolder:
+            download_path = os.path.join(self.download_dir, subfolder)
+            # Create subfolder if it doesn't exist
+            if not os.path.exists(download_path):
+                os.makedirs(download_path)
+        else:
+            download_path = self.download_dir
 
         # Determine quality levels to try
         if quality == 'auto' and self.auto_fallback:
@@ -421,7 +512,7 @@ class SpotifyDownloader:
 
                 ydl_opts = {
                     "format": "bestaudio/best",
-                    "outtmpl": f"{self.download_dir}/%(title)s.%(ext)s",
+                    "outtmpl": f"{download_path}/%(title)s.%(ext)s",
                     "noplaylist": True,
                     "progress_hooks": [self.progress_hook],
                     "quiet": True,
@@ -474,7 +565,7 @@ class SpotifyDownloader:
 
     def download_playlist(self, url, audio_format='mp3', quality='auto'):
         """
-        Download all tracks from a Spotify playlist
+        Download all tracks from a Spotify playlist/album into a subfolder
 
         Args:
             url (str): Spotify URL (track, album, or playlist)
@@ -487,6 +578,12 @@ class SpotifyDownloader:
         # Validate URL first
         if not self.validate_url(url):
             return {'total': 0, 'successful': 0, 'failed': 0}
+
+        # Get playlist/album name for subfolder
+        playlist_name = self.get_playlist_name(url)
+        if playlist_name:
+            self.print_info(f"Playlist/Album: {playlist_name}")
+            self.print_info(f"Songs will be saved to: {self.download_dir}/{playlist_name}/")
 
         self.print_info("Fetching track list from Spotify...")
         tracks = self.get_tracks_from_url(url)
@@ -504,7 +601,8 @@ class SpotifyDownloader:
 
         for i, track in enumerate(tracks, 1):
             print(f"\n{Fore.MAGENTA}[{i}/{len(tracks)}]")
-            if self.download_track(track, audio_format, quality):
+            # Pass playlist_name as subfolder (will be None for individual tracks)
+            if self.download_track(track, audio_format, quality, subfolder=playlist_name):
                 stats['successful'] += 1
             else:
                 stats['failed'] += 1
@@ -513,17 +611,25 @@ class SpotifyDownloader:
 
     def get_downloaded_files(self):
         """
-        Get list of downloaded songs
+        Get list of downloaded songs (including files in subfolders)
 
         Returns:
-            list: List of filenames in the downloaded directory
+            list: List of file paths relative to download_dir
         """
+        files = []
+
         if os.path.exists(self.download_dir):
-            return [f for f in os.listdir(self.download_dir)
-                   if f.endswith(('.mp3', '.m4a', '.webm', '.opus'))]
-        
-        # Returns all forms of audio files in the downloaded dict
-        return []
+            # Walk through all subdirectories
+            for root, dirs, filenames in os.walk(self.download_dir):
+                for filename in filenames:
+                    if filename.endswith(('.mp3', '.m4a', '.webm', '.opus', '.flac', '.wav', '.aac')):
+                        # Get path relative to download_dir
+                        full_path = os.path.join(root, filename)
+                        rel_path = os.path.relpath(full_path, self.download_dir)
+                        files.append(rel_path)
+
+        # Returns all forms of audio files in the downloaded directory and subfolders
+        return files
 
     @staticmethod
     def check_ffmpeg():
