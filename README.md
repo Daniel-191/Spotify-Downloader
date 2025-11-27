@@ -125,9 +125,9 @@ python cli.py "https://open.spotify.com/playlist/..."
 ### Using the Downloader
 
 When prompted, paste a Spotify link:
-- 🎵 **Track** → `https://open.spotify.com/track/...` → downloads the song
-- 💿 **Album** → `https://open.spotify.com/album/...` → downloads all songs in the album
-- 🎶 **Playlist** → `https://open.spotify.com/playlist/...` → downloads the entire playlist
+- **Track** → `https://open.spotify.com/track/...` → downloads the song
+- **Album** → `https://open.spotify.com/album/...` → downloads all songs in the album
+- **Playlist** → `https://open.spotify.com/playlist/...` → downloads the entire playlist
 
 The script will:
 1. Extract track information from Spotify
@@ -142,13 +142,6 @@ The script will:
 - ✅ Windows
 - ✅ macOS
 - ✅ Linux
-
----
-
-**Contributors:**
-- Daniel-191
-- ShellDrak3
-- JayM2F
 
 ---
 
