@@ -99,21 +99,8 @@ This application offers three different interfaces:
 #### 1️⃣ Desktop GUI (PyQt6) - **Recommended**
 
 Launch the modern desktop application:
-
-```bash
-python gui.py
-# or
-python3 gui.py
-# or use the launcher
-python run_gui.py
-```
-
-Features:
-- 🎨 Modern, clean dark-themed interface
-- 📊 Real-time progress tracking
-- ⚙️ Advanced audio format settings
-- 📈 Live statistics display
-- 🖱️ Easy-to-use graphical controls
+- **Double-click** `run_gui.pyw`
+- **Or run:** `python run_gui.pyw`
 
 #### 2️⃣ Web Interface (Gradio)
 
@@ -124,8 +111,6 @@ python main.py
 # or
 python3 main.py
 ```
-
-> **Note:** After running the installation script, you can also use `run.bat` (Windows) or `./run.sh` (macOS/Linux) as convenient shortcuts.
 
 Access through your browser at `http://localhost:7860`
 
@@ -184,21 +169,8 @@ This project uses the following Python packages:
 
 ---
 
-## ⚖️ License
-This project is open source and available for educational purposes.
-
----
-
 > [!WARNING]
 > This project is for **educational purposes only**.
 > Downloading copyrighted content without permission may violate copyright laws.
 > Please support artists by streaming legally on [Spotify](https://spotify.com) or purchasing their music.
 
----
-
-## 🌟 Star This Repository
-If you found this useful, please ⭐ star this repository!
-
----
-
-**Made with ❤️ by the collaborative team**
