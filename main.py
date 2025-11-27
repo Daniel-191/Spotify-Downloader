@@ -9,7 +9,7 @@ Project End Date: xx/xx/xx
 PLEASE SEE DOCUMENTATION.py FOR DOCS
 """
 
-from ui import create_ui
+from interface.ui import create_ui
 
 
 if __name__ == "__main__":
