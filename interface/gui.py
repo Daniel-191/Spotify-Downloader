@@ -37,6 +37,7 @@ class DownloadWorker(QThread):
     progress_update = pyqtSignal(int)
     status_update = pyqtSignal(str)
     console_update = pyqtSignal(str)
+    stats_update = pyqtSignal(dict)
     finished = pyqtSignal(dict)
 
     def __init__(self, url, audio_format, quality):
@@ -45,6 +46,11 @@ class DownloadWorker(QThread):
         self.audio_format = audio_format.lower()
         self.quality = quality
         self.downloader = SpotifyDownloader()
+        self.is_cancelled = False
+
+    def stop(self):
+        """Stop the download process"""
+        self.is_cancelled = True
 
     def run(self):
         """Run the download process"""
@@ -57,12 +63,52 @@ class DownloadWorker(QThread):
             self.console_update.emit(f"Starting download...\n")
             self.status_update.emit("Downloading...")
 
-            # Download playlist/track
-            stats = self.downloader.download_playlist(self.url, self.audio_format, self.quality)
+            # Validate URL first
+            if not self.downloader.validate_url(self.url):
+                self.finished.emit({'total': 0, 'successful': 0, 'failed': 0})
+                return
 
-            # Update progress to 100%
-            self.progress_update.emit(100)
-            self.status_update.emit("Complete!")
+            # Get playlist/album name for subfolder
+            playlist_name = self.downloader.get_playlist_name(self.url)
+            if playlist_name:
+                self.console_update.emit(f"Playlist/Album: {playlist_name}\n")
+
+            self.console_update.emit("Fetching track list...\n")
+            tracks = self.downloader.get_tracks_from_url(self.url)
+
+            if not tracks:
+                self.console_update.emit("No tracks found\n")
+                self.finished.emit({'total': 0, 'successful': 0, 'failed': 0})
+                return
+
+            # Download statistics
+            stats = {'total': len(tracks), 'successful': 0, 'failed': 0}
+            self.stats_update.emit(stats)
+
+            for i, track in enumerate(tracks, 1):
+                if self.is_cancelled:
+                    self.console_update.emit("\n⚠ Download cancelled by user\n")
+                    self.status_update.emit("Cancelled")
+                    break
+
+                self.console_update.emit(f"\n[{i}/{len(tracks)}]\n")
+
+                # Download track
+                if self.downloader.download_track(track, self.audio_format, self.quality, subfolder=playlist_name):
+                    stats['successful'] += 1
+                else:
+                    stats['failed'] += 1
+
+                # Update progress and stats
+                progress = int((i / len(tracks)) * 100)
+                self.progress_update.emit(progress)
+                self.stats_update.emit(stats)
+
+            # Final update
+            if not self.is_cancelled:
+                self.progress_update.emit(100)
+                self.status_update.emit("Complete!")
+
             self.finished.emit(stats)
 
         except Exception as e:
@@ -79,7 +125,7 @@ class SimpleGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Spotify Downloader")
-        self.setMinimumSize(650, 500)
+        self.setFixedSize(650, 500)
 
         # Central widget
         central = QWidget()
@@ -210,6 +256,10 @@ class SimpleGUI(QMainWindow):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.status_label)
 
+        # Button layout
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+
         self.download_btn = QPushButton("Start Download")
         self.download_btn.setMinimumHeight(36)
         self.download_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -237,7 +287,40 @@ class SimpleGUI(QMainWindow):
                 color: #888888;
             }
         """)
-        layout.addWidget(self.download_btn)
+
+        self.stop_btn = QPushButton("Stop")
+        self.stop_btn.setMinimumHeight(36)
+        self.stop_btn.setMaximumWidth(100)
+        self.stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.stop_btn.setEnabled(False)
+        self.stop_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #ff6b6b, stop:1 #cc5555);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #ff8888, stop:1 #ff6b6b);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #cc5555, stop:1 #aa4444);
+            }
+            QPushButton:disabled {
+                background: #444444;
+                color: #888888;
+            }
+        """)
+
+        button_layout.addWidget(self.download_btn)
+        button_layout.addWidget(self.stop_btn)
+        layout.addLayout(button_layout)
 
         # Console
         console_label = QLabel("Console:")
@@ -307,8 +390,9 @@ class SimpleGUI(QMainWindow):
         stats_layout.addWidget(self.failed_label)
         layout.addLayout(stats_layout)
 
-        # Connect download button
+        # Connect buttons
         self.download_btn.clicked.connect(self.start_download)
+        self.stop_btn.clicked.connect(self.stop_download)
 
         # Worker thread
         self.worker = None
@@ -338,11 +422,19 @@ class SimpleGUI(QMainWindow):
         self.update_stats(stats)
         self.download_btn.setEnabled(True)
         self.download_btn.setText("Start Download")
+        self.stop_btn.setEnabled(False)
 
         if stats['successful'] > 0:
             self.log_to_console(f"\n✓ Download complete! {stats['successful']}/{stats['total']} successful\n")
         else:
             self.log_to_console(f"\n✗ Download failed\n")
+
+    def stop_download(self):
+        """Stop the current download"""
+        if self.worker and self.worker.isRunning():
+            self.worker.stop()
+            self.log_to_console("\nStopping download...\n")
+            self.stop_btn.setEnabled(False)
 
     def start_download(self):
         """Start the download process"""
@@ -365,12 +457,14 @@ class SimpleGUI(QMainWindow):
         self.progress_bar.setValue(0)
         self.download_btn.setEnabled(False)
         self.download_btn.setText("Downloading...")
+        self.stop_btn.setEnabled(True)
 
         # Create and start worker thread
         self.worker = DownloadWorker(url, audio_format, quality)
         self.worker.progress_update.connect(self.update_progress)
         self.worker.status_update.connect(self.update_status)
         self.worker.console_update.connect(self.log_to_console)
+        self.worker.stats_update.connect(self.update_stats)
         self.worker.finished.connect(self.download_finished)
         self.worker.start()
 
