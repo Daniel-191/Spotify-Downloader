@@ -491,7 +491,6 @@ class SpotifyDownloader:
         # Determine quality levels to try
         if quality == 'auto' and self.auto_fallback:
             quality_levels = self.QUALITY_FALLBACK
-            self.print_info("Auto quality mode: Will try highest quality available")
         elif quality != 'auto' and self.auto_fallback:
             # Start with specified quality, then fallback to lower
             try:
@@ -507,9 +506,6 @@ class SpotifyDownloader:
         # Try each quality level
         for attempt_quality in quality_levels:
             try:
-                if len(quality_levels) > 1:
-                    print(f"{Fore.YELLOW}Attempting {attempt_quality} kbps...")
-
                 ydl_opts = {
                     "format": "bestaudio/best",
                     "outtmpl": f"{download_path}/%(title)s.%(ext)s",

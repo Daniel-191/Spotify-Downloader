@@ -3,12 +3,76 @@ Super Simple Test GUI to verify layout works
 """
 
 import sys
+import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QTextEdit, QComboBox, QProgressBar
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QFont, QIcon, QTextCursor
+
+# Import the Spotify downloader
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.spotify_lib import SpotifyDownloader
+
+
+class ConsoleRedirector:
+    """Redirect stdout to GUI console"""
+    def __init__(self, signal):
+        self.signal = signal
+
+    def write(self, text):
+        # Remove ANSI color codes
+        import re
+        text = re.sub(r'\x1b\[[0-9;]*m', '', text)
+        if text.strip():
+            self.signal.emit(text)
+
+    def flush(self):
+        pass
+
+
+class DownloadWorker(QThread):
+    """Worker thread to handle downloads without freezing the GUI"""
+    progress_update = pyqtSignal(int)
+    status_update = pyqtSignal(str)
+    console_update = pyqtSignal(str)
+    finished = pyqtSignal(dict)
+
+    def __init__(self, url, audio_format, quality):
+        super().__init__()
+        self.url = url
+        self.audio_format = audio_format.lower()
+        self.quality = quality
+        self.downloader = SpotifyDownloader()
+
+    def run(self):
+        """Run the download process"""
+        # Redirect stdout to GUI
+        import sys
+        old_stdout = sys.stdout
+        sys.stdout = ConsoleRedirector(self.console_update)
+
+        try:
+            self.console_update.emit(f"Starting download...\n")
+            self.status_update.emit("Downloading...")
+
+            # Download playlist/track
+            stats = self.downloader.download_playlist(self.url, self.audio_format, self.quality)
+
+            # Update progress to 100%
+            self.progress_update.emit(100)
+            self.status_update.emit("Complete!")
+            self.finished.emit(stats)
+
+        except Exception as e:
+            self.console_update.emit(f"Error: {str(e)}\n")
+            self.status_update.emit("Error occurred")
+            self.finished.emit({'total': 0, 'successful': 0, 'failed': 0})
+
+        finally:
+            # Restore stdout
+            sys.stdout = old_stdout
 
 
 class SimpleGUI(QMainWindow):
@@ -242,6 +306,73 @@ class SimpleGUI(QMainWindow):
         stats_layout.addWidget(self.success_label)
         stats_layout.addWidget(self.failed_label)
         layout.addLayout(stats_layout)
+
+        # Connect download button
+        self.download_btn.clicked.connect(self.start_download)
+
+        # Worker thread
+        self.worker = None
+
+    def log_to_console(self, message):
+        """Add message to console"""
+        self.console.append(message.strip())
+        # Auto-scroll to bottom
+        self.console.moveCursor(QTextCursor.MoveOperation.End)
+
+    def update_progress(self, value):
+        """Update progress bar"""
+        self.progress_bar.setValue(value)
+
+    def update_status(self, status):
+        """Update status label"""
+        self.status_label.setText(status)
+
+    def update_stats(self, stats):
+        """Update statistics labels"""
+        self.total_label.setText(f"Total: {stats['total']}")
+        self.success_label.setText(f"Success: {stats['successful']}")
+        self.failed_label.setText(f"Failed: {stats['failed']}")
+
+    def download_finished(self, stats):
+        """Called when download is complete"""
+        self.update_stats(stats)
+        self.download_btn.setEnabled(True)
+        self.download_btn.setText("Start Download")
+
+        if stats['successful'] > 0:
+            self.log_to_console(f"\n✓ Download complete! {stats['successful']}/{stats['total']} successful\n")
+        else:
+            self.log_to_console(f"\n✗ Download failed\n")
+
+    def start_download(self):
+        """Start the download process"""
+        url = self.url_input.text().strip()
+
+        if not url:
+            self.log_to_console("Error: Please enter a Spotify URL\n")
+            return
+
+        if "spotify.com" not in url:
+            self.log_to_console("Error: Invalid Spotify URL\n")
+            return
+
+        # Get settings
+        audio_format = self.format_combo.currentText()
+        quality = self.quality_combo.currentText().split()[0]  # Get just the number or 'auto'
+
+        # Reset UI
+        self.console.clear()
+        self.progress_bar.setValue(0)
+        self.download_btn.setEnabled(False)
+        self.download_btn.setText("Downloading...")
+
+        # Create and start worker thread
+        self.worker = DownloadWorker(url, audio_format, quality)
+        self.worker.progress_update.connect(self.update_progress)
+        self.worker.status_update.connect(self.update_status)
+        self.worker.console_update.connect(self.log_to_console)
+        self.worker.finished.connect(self.download_finished)
+        self.worker.start()
 
 def main():
     app = QApplication(sys.argv)
