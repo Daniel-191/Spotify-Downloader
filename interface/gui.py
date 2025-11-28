@@ -125,7 +125,7 @@ class SimpleGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Spotify Downloader")
-        self.setFixedSize(650, 550)
+        self.setFixedSize(650, 580)
 
         # Central widget
         central = QWidget()
