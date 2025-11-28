@@ -2,3 +2,5 @@
 /lib/__pycache__
 /.claude
 /interface/__pycache__
+/build/
+/dist/
