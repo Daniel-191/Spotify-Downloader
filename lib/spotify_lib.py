@@ -180,8 +180,6 @@ class SpotifyDownloader:
             self.print_error("Invalid Spotify URL format")
             return tracks
 
-        self.print_info(f"Detected {content_type} with ID: {spotify_id}")
-
         # Try multiple extraction methods
         approaches = [
             ("oEmbed API", self.try_oembed_api),
@@ -191,20 +189,17 @@ class SpotifyDownloader:
 
         for name, approach in approaches:
             try:
-                print(f"{Fore.CYAN}Trying {name}...")
                 tracks = approach(content_type, spotify_id, url)
                 if tracks:
-                    self.print_success(f"Found {len(tracks)} tracks using {name}")
+                    self.print_success(f"Found {len(tracks)} tracks")
                     break
-                else:
-                    self.print_warning(f"No tracks found with {name}")
             except Exception as e:
-                self.print_error(f"Error with {name}: {str(e)[:50]}...")
+                # Silently continue to next method
+                continue
 
         # For playlists/albums with many tracks, skip the first one (usually metadata)
         if len(tracks) > 10 and (content_type == 'playlist' or content_type == 'album'):
             tracks = tracks[1:]
-            self.print_info(f"Filtered playlist metadata, {len(tracks)} tracks remaining")
 
         return tracks
 
@@ -384,13 +379,13 @@ class SpotifyDownloader:
 
     def get_playlist_name(self, url):
         """
-        Extract playlist/album name from Spotify URL
+        Extract playlist/album name from Spotify URL with prefix
 
         Args:
             url (str): Spotify URL
 
         Returns:
-            str: Playlist/album name or None if not found
+            str: Playlist/album name with prefix (e.g., "Playlist - Name" or "Album - Name") or None if not found
         """
         content_type, spotify_id = self.extract_spotify_id(url)
 
@@ -401,6 +396,8 @@ class SpotifyDownloader:
         if content_type not in ['playlist', 'album']:
             return None
 
+        name = None
+
         try:
             # Try oEmbed API first (fastest)
             oembed_url = f"https://open.spotify.com/oembed?url={url}"
@@ -409,35 +406,42 @@ class SpotifyDownloader:
                 data = response.json()
                 title = data.get('title', '')
                 if title:
-                    return self.sanitize_folder_name(title)
+                    name = self.sanitize_folder_name(title)
         except:
             pass
 
-        try:
-            # Try embed page
-            embed_url = f"https://open.spotify.com/embed/{content_type}/{spotify_id}"
-            response = self.session.get(embed_url, timeout=10)
+        if not name:
+            try:
+                # Try embed page
+                embed_url = f"https://open.spotify.com/embed/{content_type}/{spotify_id}"
+                response = self.session.get(embed_url, timeout=10)
 
-            if response.status_code == 200:
-                html = response.text
+                if response.status_code == 200:
+                    html = response.text
 
-                # Look for title in meta tags
-                patterns = [
-                    r'<meta property="og:title" content="([^"]+)"',
-                    r'<title>([^<]+)</title>',
-                    r'"name":"([^"]+)"[^}]*"type":"' + content_type,
-                ]
+                    # Look for title in meta tags
+                    patterns = [
+                        r'<meta property="og:title" content="([^"]+)"',
+                        r'<title>([^<]+)</title>',
+                        r'"name":"([^"]+)"[^}]*"type":"' + content_type,
+                    ]
 
-                for pattern in patterns:
-                    match = re.search(pattern, html, re.IGNORECASE)
-                    if match:
-                        name = match.group(1).strip()
-                        # Remove "Spotify" suffix if present
-                        name = re.sub(r'\s*[-|]\s*Spotify.*$', '', name, flags=re.IGNORECASE)
-                        if name and len(name) > 2:
-                            return self.sanitize_folder_name(name)
-        except:
-            pass
+                    for pattern in patterns:
+                        match = re.search(pattern, html, re.IGNORECASE)
+                        if match:
+                            title = match.group(1).strip()
+                            # Remove "Spotify" suffix if present
+                            title = re.sub(r'\s*[-|]\s*Spotify.*$', '', title, flags=re.IGNORECASE)
+                            if title and len(title) > 2:
+                                name = self.sanitize_folder_name(title)
+                                break
+            except:
+                pass
+
+        # Add prefix based on content type
+        if name:
+            prefix = "Playlist" if content_type == "playlist" else "Album"
+            return f"{prefix} - {name}"
 
         return None
 
@@ -502,6 +506,8 @@ class SpotifyDownloader:
             quality_levels = [quality if quality != 'auto' else '192']
 
         last_error = None
+        retry_count = 0
+        max_retries = 3
 
         # Try each quality level
         for attempt_quality in quality_levels:
@@ -520,7 +526,8 @@ class SpotifyDownloader:
                         'key': 'FFmpegExtractAudio',
                         'preferredcodec': audio_format,
                         'preferredquality': attempt_quality,
-                    }]
+                    }],
+                    "retries": 3,  # Limit yt-dlp internal retries
                 }
 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -549,6 +556,16 @@ class SpotifyDownloader:
 
             except Exception as e:
                 last_error = str(e)
+
+                # Check for age-restricted content error
+                if "Sign in to confirm your age" in last_error or "age" in last_error.lower():
+                    retry_count += 1
+                    if retry_count >= max_retries:
+                        self.print_error(f"Video is age-restricted (skipping after {max_retries} attempts)")
+                        return False
+                    continue
+
+                # For other errors, try lower quality if available
                 if len(quality_levels) > 1 and attempt_quality != quality_levels[-1]:
                     self.print_warning(f"{attempt_quality} kbps failed, trying lower quality...")
                     continue
@@ -556,7 +573,11 @@ class SpotifyDownloader:
                     break
 
         # All attempts failed
-        self.print_error(f"Download failed: {last_error[:50] if last_error else 'Unknown error'}...")
+        error_msg = last_error[:80] if last_error else 'Unknown error'
+        if "Sign in to confirm your age" in error_msg:
+            self.print_error(f"Skipped: Age-restricted video")
+        else:
+            self.print_error(f"Download failed: {error_msg}...")
         return False
 
     def download_playlist(self, url, audio_format='mp3', quality='auto'):
@@ -579,16 +600,12 @@ class SpotifyDownloader:
         playlist_name = self.get_playlist_name(url)
         if playlist_name:
             self.print_info(f"Playlist/Album: {playlist_name}")
-            self.print_info(f"Songs will be saved to: {self.download_dir}/{playlist_name}/")
 
-        self.print_info("Fetching track list from Spotify...")
         tracks = self.get_tracks_from_url(url)
 
         if not tracks:
             self.print_error("No tracks found")
             return {'total': 0, 'successful': 0, 'failed': 0}
-
-        self.print_success(f"Found {len(tracks)} track(s)")
 
         # Download statistics
         # Its a little complex but trust me
