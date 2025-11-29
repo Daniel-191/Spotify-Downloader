@@ -3,7 +3,7 @@
 Download your **Spotify playlists, albums, and tracks** for free!
 This script takes a **Spotify link** (album, playlist, or track) and downloads the corresponding audio directly from **YouTube**, converting it with `ffmpeg`.
 
----
+--- 
 
 ## ✨ Features
 - 🔗 Paste a **Spotify link** (playlist / album / track) and let the script do the rest
