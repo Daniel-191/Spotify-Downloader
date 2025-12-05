@@ -31,8 +31,8 @@ Make sure you have the following before starting:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/Daniel-191/collaborative
-cd collaborative
+git clone https://github.com/Daniel-191/Spotify_Downloader
+cd Spotify_Downloader
 ```
 
 ### 2. Install dependencies
