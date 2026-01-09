@@ -19,6 +19,12 @@ This script takes a **Spotify link** (album, playlist, or track) and downloads t
 
 ---
 
+## Preview
+<img width="653" height="613" alt="image" src="https://github.com/user-attachments/assets/3f2bc8c7-4af3-48d6-a8dc-fbeac84957bc" />
+
+
+---
+
 ## 📦 Requirements
 Make sure you have the following before starting:
 - [Python 3.10+](https://www.python.org/downloads/)
