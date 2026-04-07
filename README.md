@@ -6,16 +6,16 @@ This script takes a **Spotify link** (album, playlist, or track) and downloads t
 --- 
 
 ## ✨ Features
-- 🔗 Paste a **Spotify link** (playlist / album / track) and let the script do the rest
-- 📂 Downloads full **playlists**, **albums**, or single tracks
-- 🎶 Converts audio to **MP3** format using `ffmpeg`
-- 🎨 Beautiful **colored console output** with progress bars
-- 🖥️ **Modern PyQt6 GUI** - Clean, modern desktop interface
-- 🌐 **Web Interface** - Gradio-based web UI for browser access
-- ⚡ Simple setup with **automated installation scripts**
-- 🖥 Cross-platform support: **Windows**, **macOS**, **Linux**
-- 🔄 **Multiple extraction methods** - Tries different approaches to fetch track lists
-- ✅ **Error handling** - Automatically retries failed downloads
+- Paste a **Spotify link** (playlist / album / track) and let the script do the rest
+- Downloads full **playlists**, **albums**, or single tracks
+- Converts audio to **MP3** format using `ffmpeg`
+- Beautiful **colored console output** with progress bars
+- **Modern PyQt6 GUI** - Clean, modern desktop interface
+- **Web Interface** - Gradio-based web UI for browser access
+- Simple setup with **automated installation scripts**
+- Cross-platform support: **Windows**, **macOS**, **Linux**
+- **Multiple extraction methods** - Tries different approaches to fetch track lists
+- **Error handling** - Automatically retries failed downloads
 
 ---
 
